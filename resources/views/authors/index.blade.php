@@ -10,7 +10,14 @@
     <div style="color:green">{{ session('success') }}</div>
 @endif
 
-<!-- Kereső -->
+<form action="{{ route('authors.export.csv') }}" method="GET" style="display:inline;">
+    <button type="submit">Export CSV</button>
+</form>
+<form action="{{ route('authors.export.pdf') }}" method="GET" style="display:inline;">
+    <button type="submit">Export PDF</button>
+</form>
+
+
 <form method="GET" action="{{ route('authors.index') }}">
     <input type="text" name="needle" placeholder="Keresés..." value="{{ request('needle') }}">
     <button type="submit">Keresés</button>

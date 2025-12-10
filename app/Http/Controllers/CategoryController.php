@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Barryvdh\DomPDF\Facade\Pdf;
+
 
 class CategoryController extends Controller
 {
@@ -95,6 +97,40 @@ class CategoryController extends Controller
 
             $name = $response->json('name') ?? 'Ismeretlen';
             return redirect()->route('categories.index')->with('success', "$name kategória sikeresen törölve!");
+        } catch (\Exception $e) {
+            return redirect()->route('categories.index')->with('error', $e->getMessage());
+        }
+    }
+
+    public function exportCsv()
+    {
+        try {
+            $response = Http::api()->get('/categories');
+            $entities = $response->json('categories') ?? [];
+
+            $csvContent = "ID,Név\n";
+            foreach ($entities as $category) {
+                $csvContent .= "{$category['id']},\"{$category['name']}\"\n";
+            }
+
+            $filename = "categories.csv";
+            return response($csvContent)
+                ->header('Content-Type', 'text/csv')
+                ->header('Content-Disposition', "attachment; filename=\"$filename\"");
+
+        } catch (\Exception $e) {
+            return redirect()->route('categories.index')->with('error', $e->getMessage());
+        }
+    }
+
+    public function exportPdf()
+    {
+        try {
+            $response = Http::api()->get('/categories');
+            $entities = $response->json('categories') ?? [];
+
+            $pdf = Pdf::loadView('categories.pdf', ['entities' => $entities]);
+            return $pdf->download('categories.pdf');
         } catch (\Exception $e) {
             return redirect()->route('categories.index')->with('error', $e->getMessage());
         }

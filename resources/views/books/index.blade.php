@@ -10,7 +10,11 @@
     <div style="color:green">{{ session('success') }}</div>
 @endif
 
-<!-- Kereső űrlap -->
+<div style="margin-bottom: 15px;">
+    <a href="{{ route('books.export.csv') }}" class="btn">Export CSV</a>
+    <a href="{{ route('books.export.pdf') }}" class="btn">Export PDF</a>
+</div>
+
 <form method="GET" action="{{ route('books.index') }}" style="margin-bottom: 20px;">
     <input type="text" name="needle" value="{{ request('needle') }}" placeholder="Keresés...">
     <button type="submit">Keresés</button>

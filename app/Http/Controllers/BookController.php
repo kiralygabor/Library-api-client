@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class BookController extends Controller
 {
@@ -113,5 +114,48 @@ class BookController extends Controller
         } catch (\Exception $e) {
             return redirect()->route('books.index')->with('error', $e->getMessage());
         }
+    }
+
+    public function exportCsv()
+    {
+        $response = Http::api()->get('books');
+        $books = $response->json('books') ?? [];
+
+        $filename = 'books_' . date('Y-m-d_H-i-s') . '.csv';
+
+        $headers = [
+            'Content-Type' => 'text/csv',
+            'Content-Disposition' => "attachment; filename=\"$filename\"",
+        ];
+
+        $callback = function() use ($books) {
+            $handle = fopen('php://output', 'w');
+            fputcsv($handle, ['ID','Név','Kategória ID','Ár','Megjelenés','Kiadás','Szerző ID','ISBN']);
+            foreach ($books as $book) {
+                fputcsv($handle, [
+                    $book['id'],
+                    $book['name'],
+                    $book['category_id'],
+                    $book['price'],
+                    $book['publication_date'],
+                    $book['edition'],
+                    $book['author_id'],
+                    $book['isbn'],
+                ]);
+            }
+            fclose($handle);
+        };
+
+        return response()->stream($callback, 200, $headers);
+    }
+
+    public function exportPdf()
+    {
+        $response = Http::api()->get('books');
+        $books = $response->json('books') ?? [];
+
+        $pdf = Pdf::loadView('books.pdf', ['books' => $books]);
+
+        return $pdf->download('books_' . date('Y-m-d_H-i-s') . '.pdf');
     }
 }

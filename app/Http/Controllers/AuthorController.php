@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Barryvdh\DomPDF\Facade\Pdf;
+
 
 class AuthorController extends Controller
 {
@@ -97,6 +99,64 @@ class AuthorController extends Controller
 
             $name = $response->json('name') ?? 'Ismeretlen';
             return redirect()->route('authors.index')->with('success', "$name szerző sikeresen törölve!");
+        } catch (\Exception $e) {
+            return redirect()->route('authors.index')->with('error', $e->getMessage());
+        }
+    }
+
+    public function exportCsv()
+    {
+        try {
+            $response = Http::api()->get('authors');
+            $authors = $response->json('authors') ?? [];
+
+            $filename = "authors_" . date('Y-m-d_H-i-s') . ".csv";
+
+            $headers = [
+                "Content-type" => "text/csv",
+                "Content-Disposition" => "attachment; filename=$filename",
+                "Pragma" => "no-cache",
+                "Cache-Control" => "must-revalidate, post-check=0, pre-check=0",
+                "Expires" => "0"
+            ];
+
+            $columns = ['ID', 'Name', 'Nationality', 'Age', 'Gender'];
+
+            $callback = function() use ($authors, $columns) {
+                $file = fopen('php://output', 'w');
+                fputcsv($file, $columns);
+
+                foreach ($authors as $author) {
+                    fputcsv($file, [
+                        $author['id'],
+                        $author['name'],
+                        $author['nationality'],
+                        $author['age'],
+                        $author['gender']
+                    ]);
+                }
+
+                fclose($file);
+            };
+
+            return response()->stream($callback, 200, $headers);
+
+        } catch (\Exception $e) {
+            return redirect()->route('authors.index')->with('error', $e->getMessage());
+        }
+    }
+
+    public function exportPdf()
+    {
+        try {
+            $response = Http::api()->get('authors');
+            $authors = $response->json('authors') ?? [];
+
+            $pdf = Pdf::loadView('authors.pdf', ['entities' => $authors])
+                    ->setPaper('A4', 'landscape');
+
+            return $pdf->stream('authors_' . date('Y-m-d_H-i-s') . '.pdf');
+
         } catch (\Exception $e) {
             return redirect()->route('authors.index')->with('error', $e->getMessage());
         }

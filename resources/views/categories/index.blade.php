@@ -10,6 +10,9 @@
     <div style="color:green">{{ session('success') }}</div>
 @endif
 
+<a href="{{ route('categories.export.csv') }}"><button>CSV export</button></a>
+<a href="{{ route('categories.export.pdf') }}"><button>PDF export</button></a>
+
 <form action="{{ route('categories.index') }}" method="GET">
     <input type="text" name="needle" placeholder="Keresés..." value="{{ request('needle') }}">
     <button type="submit">Keresés</button>
