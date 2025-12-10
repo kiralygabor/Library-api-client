@@ -1,57 +1,40 @@
 @extends('layout')
 
 @section('content')
-<div class="container">
     <h1>Új könyv hozzáadása</h1>
 
-    <form action="{{ route('books.store') }}" method="post" enctype="multipart/form-data">
+    @if(session('error'))
+        <div class="alert error">{{ session('error') }}</div>
+    @endif
+
+    <form action="{{ route('books.store') }}" method="POST" enctype="multipart/form-data">
         @csrf
 
-        <fieldset class="mb-3">
-            <label for="name">Megnevezés</label>
-            <input type="text" id="name" name="name" required 
-                   value="{{ old('name') }}">  
+        <label>Cím:</label>
+        <input type="text" name="name" required>
 
-            <label for="category_id">Kategória</label>
-            <select name="category_id" id="category_id" required>
-                <option value="" disabled selected>-- Válassz kategóriát --</option>
-                @foreach($categories as $category)
-                    <option value="{{ $category->id }}" 
-                        {{ old('category_id') == $category->id ? 'selected' : '' }}>
-                        {{ $category->name }}
-                    </option>
-                @endforeach
-            </select>
+        <label>Kategória ID:</label>
+        <input type="number" name="category_id" required>
 
-            <label for="price">Ár</label>
-            <input type="text" id="price" name="price" required 
-                   value="{{ old('price') }}">  
+        <label>Szerző ID:</label>
+        <input type="number" name="author_id" required>
 
-            <label for="publication_date">Kiadási Év</label>
-            <input type="text" id="publication_date" name="publication_date" required 
-                   value="{{ old('publication_date') }}">  
+        <label>Ár:</label>
+        <input type="number" step="0.01" name="price" required>
 
-            <label for="edition">Kiadás</label>
-            <input type="text" id="edition" name="edition" required 
-                   value="{{ old('edition') }}">  
+        <label>Megjelenés:</label>
+        <input type="date" name="publication_date" required>
 
-            <label for="author_id">Szerző</label>
-            <select name="author_id" id="author_id" required>
-                <option value="" disabled selected>-- Válassz szerzőt --</option>
-                @foreach($authors as $author)
-                    <option value="{{ $author->id }}" 
-                        {{ old('author_id') == $author->id ? 'selected' : '' }}>
-                        {{ $author->name }}
-                    </option>
-                @endforeach
-            </select>
+        <label>Kiadás:</label>
+        <input type="number" name="edition" required>
 
-            <label for="cover">Borító</label><br>
-            <input type="file" id="cover" name="cover" accept="image/*">
-        </fieldset>
+        <label>ISBN:</label>
+        <input type="text" name="isbn" required>
 
-        <button type="submit" class="btn btn-primary">Ment</button>
-        <a href="{{ route('books.index') }}" class="btn btn-secondary">Mégse</a>
+        <label>Borító:</label>
+        <input type="file" name="cover">
+
+        <button type="submit">Mentés</button>
+        <a href="{{ route('books.index') }}">Mégsem</a>
     </form>
-</div>
 @endsection

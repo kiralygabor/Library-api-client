@@ -1,57 +1,48 @@
-    @extends('layout')
-    
-    @section('content')
-    <h1>Kategóriák</h1>
-    <div>
-        <!-- Happiness is not something readymade. It comes from your own actions. - Dalai Lama -->
-    
-        <ul>
-            <table>
-            <a href="{{ route(name: 'categories.create') }}" title="Új">Új hozzáadása</a>
-            @foreach($categories as $category)
-                <li class="row {{ $loop->iteration % 2 == 0 ? 'even' : 'odd' }}">
-                    <div class="col id">{{ $category->id }}</div>
-                    <div class="col">
-            {{ $category->name }}
-    </div>
+@extends('layout')
 
-                    <div class="right">
-                        <div class="col">
-    {{--                        <a href="{{ route('categories.show', $category->id) }}"><button><i class="fa fa-binoculars" title="Mutat"></i></button></a></div>--}}
-                        
-                        </div>
-    
-                        
-                            <div class="col">
-                                <a href="{{ route('categories.edit', $category->id) }}"><button>Módosít</button></a>
-                            </div>
-                            <div class="col">
-                                <form action="{{ route('categories.destroy', $category->id) }}" method="POST" 
-        onsubmit="return confirm('Biztos törlöd?');" 
-        style="display:inline; margin:0; padding:0;">
-        @csrf
-        @method('DELETE')
-        <button type="submit" class="btn">Töröl</button>
-    </form>
-                            </div>
-                        
-                    </div>
-    
-                </li>
-            @endforeach
-            </table>
-        </ul>
-        @isset($abc)
-            <div class="paginator">
-                {{ $subjects
-                    ->appends([
-                        'sort_by' => request('sort_by'),
-                        'sort_dir' => request('sort_dir'),
-                    ])
-                    ->links()
-    
-                }}
-            </div>
-        @endisset
-    </div>
-    @endsection
+@section('content')
+<h1>Kategóriák</h1>
+
+@if(session('error'))
+    <div style="color:red">{{ session('error') }}</div>
+@endif
+@if(session('success'))
+    <div style="color:green">{{ session('success') }}</div>
+@endif
+
+<form action="{{ route('categories.index') }}" method="GET">
+    <input type="text" name="needle" placeholder="Keresés..." value="{{ request('needle') }}">
+    <button type="submit">Keresés</button>
+</form>
+
+<table border="1">
+    <thead>
+        <tr>
+            <th>Név</th>
+            <th>Műveletek</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach($entities as $category)
+        <tr>
+            <td>{{ $category['name'] }}</td>
+            <td>
+                @if($isAuthenticated)
+                    <a href="{{ route('categories.edit', ['id' => $category['id'], 'name' => $category['name']]) }}">Szerkesztés</a>
+
+                    <form action="{{ route('categories.destroy', $category['id']) }}" method="POST" style="display:inline;">
+                        @csrf
+                        @method('DELETE')
+                        <button onclick="return confirm('Biztos törlöd?')">Törlés</button>
+                    </form>
+                @endif
+            </td>
+        </tr>
+        @endforeach
+    </tbody>
+</table>
+
+@if($isAuthenticated)
+    <a href="{{ route('categories.create') }}">Új kategória hozzáadása</a>
+@endif
+@endsection

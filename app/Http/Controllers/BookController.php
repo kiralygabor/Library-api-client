@@ -1,195 +1,117 @@
-<?php 
+<?php
 
 namespace App\Http\Controllers;
 
-use App\Http\Requests\BookRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 
 class BookController extends Controller
 {
-
     public function index(Request $request)
-    {
-        $needle = $request->get('needle');
+{
+    $needle = $request->get('needle'); 
 
-        try {
-            $url = $needle ? "books?needle=" . urlencode($needle) : "books";
+    try {
+        $url = $needle ? "books?needle=" . urlencode($needle) : "books";
+        $response = Http::api()->get($url);
 
-            $response = Http::api()->get($url);
-
-            if ($response->failed()) {
-                $message = $response->json('message') ?? 'Ismeretlen hiba történt.';
-                return redirect()
-                    ->route('books.index')
-                    ->with('error', "Hiba történt a lekérdezés során: $message");
-            }
-
-            $entities = ResponseHelper::getData($response);
-
-            return view('books.index', ['entities' => $entities, 'isAuthenticated' => $this->isAuthenticated()]);
-
-        } catch (\Exception $e) {
-            return redirect()
-                ->route('books.index')
-                ->with('error', "Nem sikerült betölteni a könyveket: " . $e->getMessage());
+        if ($response->failed()) {
+            $message = $response->json('message') ?? 'Ismeretlen hiba történt.';
+            return redirect()->route('books.index')->with('error', $message);
         }
 
+        $entities = $response->json('books') ?? [];
+
+        return view('books.index', [
+            'entities' => $entities,
+            'isAuthenticated' => auth()->check()
+        ]);
+    } catch (\Exception $e) {
+        return redirect()->route('books.index')->with('error', $e->getMessage());
     }
+}
 
-    public function show($id)
-    {
-        try {
-            $response = Http::api()->get("/books/$id");
-
-            if ($response->failed()) {
-                $message = $response->json('message') ?? 'A könyv nem található vagy hiba történt.';
-                return redirect()
-                    ->route('books.index')
-                    ->with('error', "Hiba: $message");
-            }
-
-            $body = $response->json();
-            $entity = $body['book'] ?? null;
-
-            if (!$entity) {
-                return redirect()
-                    ->route('books.index')
-                    ->with('error', "A könyvek adatai nem érhetők el.");
-            }
-
-            return view('books.show', ['entity' => $entity]);
-
-        } catch (\Exception $e) {
-            return redirect()
-                ->route('books.index')
-                ->with('error', "Nem sikerült betölteni a könyv adatait: " . $e->getMessage());
-        }
-    }
 
     public function create()
     {
         return view('books.create');
     }
-	
 
-    public function store(AuthorRequest $request)
+    public function store(Request $request)
     {
-        $name = $request->get('name');
+        $data = $request->only([
+            'name','category_id','price','publication_date','edition',
+            'author_id','isbn','cover'
+        ]);
 
         try {
-            $response = Http::api()
-                ->withToken($this->token)
-                ->post('/books', ['name' => $name]);
+            $response = Http::api()->withToken(session('token'))->post('/books', $data);
 
             if ($response->failed()) {
-                // Ha az API válaszolt, de hibás státuszkóddal (pl. 422, 403, 500)
                 $message = $response->json('message') ?? 'Nem sikerült létrehozni a könyvet.';
-                return redirect()
-                    ->route('books.index')
-                    ->with('error', "Hiba: $message");
+                return redirect()->route('books.index')->with('error', $message);
             }
 
-            return redirect()
-                ->route('books.index')
-                ->with('success', "$name könyv sikeresen létrehozva!");
-
+            return redirect()->route('books.index')->with('success', "{$data['name']} könyv sikeresen létrehozva!");
         } catch (\Exception $e) {
-            // Hálózati vagy JSON dekódolási hiba
-            return redirect()
-                ->route('books.index')
-                ->with('error', "Nem sikerült kommunikálni az API-val: " . $e->getMessage());
+            return redirect()->route('books.index')->with('error', $e->getMessage());
         }
-
     }
 
-	public function edit($id)
+    public function edit(Request $request, $id)
     {
+        $entity = [
+            'id' => $id,
+            'name' => $request->get('name', ''),
+            'category_id' => $request->get('category_id', ''),
+            'price' => $request->get('price', ''),
+            'publication_date' => $request->get('publication_date', ''),
+            'edition' => $request->get('edition', ''),
+            'author_id' => $request->get('author_id', ''),
+            'isbn' => $request->get('isbn', ''),
+            'cover' => $request->get('cover', ''),
+        ];
+
+        return view('books.edit', ['entity' => $entity]);
+    }
+
+
+
+    public function update(Request $request, $id)
+    {
+        $data = $request->only([
+            'name','category_id','price','publication_date','edition',
+            'author_id','isbn','cover'
+        ]);
+
         try {
-            $response = Http::api()->get("/books/$id");
+            $response = Http::api()->withToken(session('token'))->put("/books/$id", $data);
 
             if ($response->failed()) {
-                $message = $response->json('message') ?? 'A könyv nem található vagy hiba történt.';
-                return redirect()
-                    ->route('books.index')
-                    ->with('error', "Hiba: $message");
+                $message = $response->json('message') ?? 'Nem sikerült frissíteni a könyvet.';
+                return redirect()->route('books.index')->with('error', $message);
             }
 
-            $body = $response->json();
-            $entity = $body['book'] ?? null;
-
-            if (!$entity) {
-                return redirect()
-                    ->route('books.index')
-                    ->with('error', "A könyv adatai nem érhetők el.");
-            }
-
-            return view('books.edit', ['entity' => $entity]);
-
+            return redirect()->route('books.index')->with('success', "{$data['name']} könyv sikeresen frissítve!");
         } catch (\Exception $e) {
-            return redirect()
-                ->route('books.index')
-                ->with('error', "Nem sikerült betölteni a könyv szerkesztő nézetét: " . $e->getMessage());
+            return redirect()->route('books.index')->with('error', $e->getMessage());
         }
     }
-
-
-    public function update(BookRequest $request, $id)
-    {
-        $name = $request->get('name');
-
-        try {
-            $response = Http::api()
-                ->withToken($this->token)
-                ->put("/books/$id", ['name' => $name]);
-
-            if ($response->successful()) {
-                return redirect()
-                    ->route('books.index')
-                    ->with('success', "$name könyv sikeresen frissítve!");
-            }
-
-            // Ha nem sikeres, de nem dobott kivételt (pl. 422)
-            $errorMessage = $response->json('message') ?? 'Ismeretlen hiba történt.';
-            return redirect()
-                ->route('books.index')
-                ->with('error', "Hiba történt: $errorMessage");
-
-        } catch (\Exception $e) {
-            // Hálózati vagy egyéb kivétel
-            return redirect()
-                ->route('authors.index')
-                ->with('error', "Nem sikerült frissíteni: " . $e->getMessage());
-        }
-    }
-
 
     public function destroy($id)
     {
         try {
-            $response = Http::api()
-                ->withToken($this->token)
-                ->delete("/books/$id", ['id' => $id]);
+            $response = Http::api()->withToken(session('token'))->delete("/books/$id");
 
             if ($response->failed()) {
                 $message = $response->json('message') ?? 'Nem sikerült törölni a könyvet.';
-                return redirect()
-                    ->route('books.index')
-                    ->with('error', "Hiba: $message");
+                return redirect()->route('books.index')->with('error', $message);
             }
 
-            $body = $response->json();
-            $name = $body['name'] ?? 'Ismeretlen';
-
-            return redirect()
-                ->route('books.index')
-                ->with('success', "$name könyv sikeresen törölve!");
-
+            $name = $response->json('name') ?? 'Ismeretlen';
+            return redirect()->route('books.index')->with('success', "$name könyv sikeresen törölve!");
         } catch (\Exception $e) {
-            return redirect()
-                ->route('books.index')
-                ->with('error', "Nem sikerült kommunikálni az API-val: " . $e->getMessage());
+            return redirect()->route('books.index')->with('error', $e->getMessage());
         }
     }
-
 }

@@ -1,19 +1,13 @@
 @extends('layout')
-<div>
-    <!-- Do what you can, with what you have, where you are. - Theodore Roosevelt -->
-</div>
+
 @section('content')
-    <div>
-        <!-- Simplicity is the ultimate sophistication. - Leonardo da Vinci -->
-        <form action="{{ route('categories.update', $category->id) }}" method="post">
-            @csrf
-            @method('PATCH')
-            <fieldset>
-                <label for="name">Megnevezés</label>
-                <input type="text" id="name" name="name" required value="{{ old('name', $category->name) }}"> 
-            </fieldset>
-            <button type="submit">Ment</button>
-            <a href="{{ route('categories.index') }}">Mégse</a>
-        </form>
-    </div>
+<h1>Kategória szerkesztése</h1>
+
+<form action="{{ route('categories.update', $entity['id']) }}" method="POST">
+    @csrf
+    @method('PUT')
+    <label>Név: <input type="text" name="name" value="{{ $entity['name'] }}"></label><br>
+    <button type="submit">Mentés</button>
+    <a href="{{ route('categories.index') }}">Mégsem</a>
+</form>
 @endsection

@@ -1,29 +1,30 @@
 @extends('layout')
 
-	<main>
-        	@yield('content')
-    	</main>
-
-	
 @section('content')
-<h1>Új Szerző</h1>
-<div>
+<h1>Új szerző hozzáadása</h1>
 
+@if(session('error'))
+    <div style="color:red">{{ session('error') }}</div>
+@endif
 
-<form action="{{ route('authors.store') }}" method="post" enctype="multipart/form-data">
-        @csrf
-        <fieldset>
-            <label for="name">Megnevezés</label>
-            <input type="text" id="name" name="name">
-            <label for="name">Nemzetiség</label>
-            <input type="text" id="nationality" name="nationality">
-            <label for="name">Életkor</label>
-            <input type="text" id="age" name="age">
-            <label for="name">Nem</label>
-            <input type="text" id="gender" name="gender">
-        </fieldset>
-        <button type="submit">Ment</button>
-        <a href="{{ route('authors.index') }}">Mégse</a>
-    </form>
-</div>
+<form action="{{ route('authors.store') }}" method="POST">
+    @csrf
+    <label>Név:</label>
+    <input type="text" name="name" required><br>
+
+    <label>Nemzetiség:</label>
+    <input type="text" name="nationality" required><br>
+
+    <label>Életkor:</label>
+    <input type="number" name="age" required><br>
+
+    <label>Nem:</label>
+    <select name="gender" required>
+        <option value="male">férfi</option>
+        <option value="female">nő</option>
+    </select><br>
+
+    <button type="submit">Mentés</button>
+    <a href="{{ route('authors.index') }}">Mégsem</a>
+</form>
 @endsection

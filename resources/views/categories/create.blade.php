@@ -1,23 +1,16 @@
 @extends('layout')
 
-	<main>
-        	@yield('content')
-    	</main>
-
-	
 @section('content')
-<h1>Új Kategória</h1>
-<div>
+<h1>Új kategória hozzáadása</h1>
 
+@if(session('error'))
+    <div style="color:red">{{ session('error') }}</div>
+@endif
 
-<form action="{{ route('categories.store') }}" method="post" enctype="multipart/form-data">
-        @csrf
-        <fieldset>
-            <label for="name">Megnevezés</label>
-            <input type="text" id="name" name="name">
-        </fieldset>
-        <button type="submit">Ment</button>
-        <a href="{{ route('categories.index') }}">Mégse</a>
-    </form>
-</div>
+<form action="{{ route('categories.store') }}" method="POST">
+    @csrf
+    <label>Név: <input type="text" name="name" required></label><br>
+    <button type="submit">Mentés</button>
+    <a href="{{ route('categories.index') }}">Mégsem</a>
+</form>
 @endsection

@@ -35,7 +35,7 @@
     </main>
  
     <footer>
-        <p>&copy; Király Gábor - Praszna Koppány - Nagy Gergely - 2025</p>
+        <p>&copy; Király Gábor - 2025</p>
     </footer>
  
 </body>

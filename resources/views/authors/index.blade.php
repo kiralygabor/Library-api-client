@@ -1,59 +1,55 @@
 @extends('layout')
- 
+
 @section('content')
 <h1>Szerzők</h1>
-<div>
-    <!-- Happiness is not something readymade. It comes from your own actions. - Dalai Lama -->
- 
-    <ul>
-        <table>
-        <a href="{{ route(name: 'authors.create') }}" title="Új">Új hozzáadása</a>
-        @foreach($authors as $author)
-            <li class="row {{ $loop->iteration % 2 == 0 ? 'even' : 'odd' }}">
-                <div class="col id">{{ $author->id }}</div>
-                <div class="col">
-    <a href="{{ route('authors.show', $author->id) }}">
-        {{ $author->name }}
-    </a>
-</div>
 
-                <div class="right">
-                    <div class="col">
-{{--                        <a href="{{ route('authors.show', $author->id) }}"><button><i class="fa fa-binoculars" title="Mutat"></i></button></a></div>--}}
-                       
-                    </div>
- 
-                    
-                        <div class="col">
-                            <a href="{{ route('authors.edit', $author->id) }}"><button>Módosít</button></a>
-                        </div>
-                        <div class="col">
-                               <form action="{{ route('authors.destroy', $author->id) }}" method="POST" 
-      onsubmit="return confirm('Biztos törlöd?');" 
-      style="display:inline; margin:0; padding:0;">
-    @csrf
-    @method('DELETE')
-    <button type="submit" class="btn">Töröl</button>
+@if(session('error'))
+    <div style="color:red">{{ session('error') }}</div>
+@endif
+@if(session('success'))
+    <div style="color:green">{{ session('success') }}</div>
+@endif
+
+<!-- Kereső -->
+<form method="GET" action="{{ route('authors.index') }}">
+    <input type="text" name="needle" placeholder="Keresés..." value="{{ request('needle') }}">
+    <button type="submit">Keresés</button>
 </form>
-                        </div>
-                    
-                </div>
- 
-            </li>
+
+<table border="1">
+    <thead>
+        <tr>
+            <th>Név</th>
+            <th>Nemzetiség</th>
+            <th>Kor</th>
+            <th>Nem</th>
+            <th>Műveletek</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach($entities as $author)
+        <tr>
+            <td>{{ $author['name'] }}</td>
+            <td>{{ $author['nationality'] }}</td>
+            <td>{{ $author['age'] }}</td>
+            <td>{{ $author['gender'] }}</td>
+            <td>
+                @if(auth()->check())
+                    <a href="{{ route('authors.edit', $author['id']) }}">Szerkesztés</a>
+
+                    <form action="{{ route('authors.destroy', $author['id']) }}" method="POST" style="display:inline;">
+                        @csrf
+                        @method('DELETE')
+                        <button onclick="return confirm('Biztos törlöd?')">Törlés</button>
+                    </form>
+                @endif
+            </td>
+        </tr>
         @endforeach
-        </table>
-    </ul>
-    @isset($abc)
-        <div class="paginator">
-            {{ $subjects
-                ->appends([
-                    'sort_by' => request('sort_by'),
-                    'sort_dir' => request('sort_dir'),
-                ])
-                ->links()
- 
-            }}
-        </div>
-    @endisset
-</div>
+    </tbody>
+</table>
+
+@if(auth()->check())
+    <a href="{{ route('authors.create') }}">Új szerző hozzáadása</a>
+@endif
 @endsection
